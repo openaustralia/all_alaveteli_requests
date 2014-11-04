@@ -20,12 +20,10 @@ def load_secrets
   end
 end
 
-def all_request_urls
+def request_urls(url)
   agent = Mechanize.new
 
-  url = "https://www.righttoknow.org.au/list/all"
   links = []
-
   while url
     puts "Looking at page #{url}..."
     page = agent.get(url)
@@ -43,6 +41,10 @@ def all_request_urls
     end
   end
   links
+end
+
+def all_request_urls
+  request_urls("https://www.righttoknow.org.au/list/all")
 end
 
 OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
