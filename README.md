@@ -19,3 +19,6 @@ So, instead we are to scraping the pages. I know, it's not pretty.
 To download the zipped version of the request we need to be logged in. I think this is the case
 to limit load on the server due to spiders, etc.. So we need login details so we can do this
 automatically for every request.
+
+Make sure however that you don't user a superuser account to do this. Otherwise it will be able
+to see (and download) requests that are hidden. This could be very bad.
