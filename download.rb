@@ -109,9 +109,10 @@ if File.exists?("data/unzipped")
 else
   Dir.entries("data").each do |entry|
     if entry != "." && entry != ".." && entry != "downloaded"
-      Dir.chdir("data/#{entry}") do
+      FileUtils.mkdir("data/#{entry}/download")
+      Dir.chdir("data/#{entry}/download") do
         puts "Unzipping data/#{entry}/download.zip"
-        system("unzip download.zip")
+        system("unzip ../download.zip")
       end
     end
   end
