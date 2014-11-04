@@ -16,6 +16,9 @@ def load_secrets
     puts "Create a file .secrets and put your Alaveteli email and password there like this:"
     puts 'email: YOUR@EMAIL'
     puts 'password: YOURPASSWORD'
+    puts 'start:'
+    puts '  year: YEAR_OF_FIRST_REQUEST_ON_YOUR_SITE'
+    puts '  month: MONTH_OF_FIRST_REQUEST_ON_YOUR_SITE'
     exit
   end
 end
@@ -43,16 +46,22 @@ def request_urls(url)
   links
 end
 
-def all_request_urls
-  request_urls("https://www.righttoknow.org.au/list/all")
+def all_request_urls(start_date)
+  links = []
+  # First request was in October 2012
+  from_date = start_date
+  while from_date <= Date.today
+    to_date = from_date.next_month
+    links += request_urls("https://www.righttoknow.org.au/list/all?request_date_after=#{from_date.strftime('%Y/%m/%d')}&request_date_before=#{to_date.strftime('%Y/%m/%d')}")
+    from_date = from_date.next_month
+  end
+  links
 end
 
 OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 
-#requests = ["https://www.righttoknow.org.au/request/the_socio_economic_impact_assess"]
-requests = all_request_urls
 secrets = load_secrets
-
+requests = all_request_urls(Date.new(secrets["start"]["year"], secrets["start"]["month"], 1))
 
 agent = Mechanize.new
 page = agent.get("https://www.righttoknow.org.au/profile/sign_in")
@@ -85,5 +94,6 @@ requests.each do |request|
       puts "Something went wrong... Let's just continue"
       #raise
     end
+    puts "Done"
   end
 end
