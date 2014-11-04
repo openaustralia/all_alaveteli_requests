@@ -57,42 +57,49 @@ def all_request_urls(start_date)
   links.uniq
 end
 
-OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
-
 secrets = load_secrets
-requests = all_request_urls(Date.new(secrets["start"]["year"], secrets["start"]["month"], 1))
 
-agent = Mechanize.new
-page = agent.get("https://www.righttoknow.org.au/profile/sign_in")
-form = page.form_with(id: "signin_form")
-email_field = form.field_with(name: "user_signin[email]")
-password_field = form.field_with(name: "user_signin[password]")
-email_field.value = secrets["email"]
-password_field.value = secrets["password"]
-page = form.submit
+if File.exists?("data/downloaded")
+  puts "Skipping the downloading because we've already finished that"
+else
+  OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 
-# First need to login because we can't download the zip file without being logged in
+  requests = all_request_urls(Date.new(secrets["start"]["year"], secrets["start"]["month"], 1))
 
-requests.each do |request|
-  json = agent.get("#{request}.json").body.to_s
-  page = JSON.parse(json)
-  id = page["id"]
-  if File.exists?("data/#{id}")
-    puts "Skipping request #{id}. Already downloaded."
-  else
-    puts "Downloading data for request #{id}..."
-    begin
-      # Create a directory based on the id
-      FileUtils.mkdir_p("data/#{id}")
-      File.open("data/#{id}/request.json", "w") {|f| f.write(json)}
-      zip = agent.get("#{request}/download").body
-      File.open("data/#{id}/download.zip", "w") {|f| f.write(zip)}
-    rescue
-      # Any problems just delete the whole directory
-      FileUtils.rm_rf("data/#{id}")
-      puts "Something went wrong... Let's just continue"
-      #raise
+  agent = Mechanize.new
+  page = agent.get("https://www.righttoknow.org.au/profile/sign_in")
+  form = page.form_with(id: "signin_form")
+  email_field = form.field_with(name: "user_signin[email]")
+  password_field = form.field_with(name: "user_signin[password]")
+  email_field.value = secrets["email"]
+  password_field.value = secrets["password"]
+  page = form.submit
+
+  # First need to login because we can't download the zip file without being logged in
+
+  requests.each do |request|
+    json = agent.get("#{request}.json").body.to_s
+    page = JSON.parse(json)
+    id = page["id"]
+    if File.exists?("data/#{id}")
+      puts "Skipping request #{id}. Already downloaded."
+    else
+      puts "Downloading data for request #{id}..."
+      begin
+        # Create a directory based on the id
+        FileUtils.mkdir_p("data/#{id}")
+        File.open("data/#{id}/request.json", "w") {|f| f.write(json)}
+        zip = agent.get("#{request}/download").body
+        File.open("data/#{id}/download.zip", "w") {|f| f.write(zip)}
+      rescue
+        # Any problems just delete the whole directory
+        FileUtils.rm_rf("data/#{id}")
+        puts "Something went wrong... Let's just continue"
+        #raise
+      end
+      puts "Done"
     end
-    puts "Done"
   end
+
+  FileUtils.touch("data/downloaded")
 end
