@@ -45,6 +45,8 @@ def all_request_urls
   links
 end
 
+OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
+
 #requests = ["https://www.righttoknow.org.au/request/the_socio_economic_impact_assess"]
 requests = all_request_urls
 secrets = load_secrets
@@ -78,7 +80,8 @@ requests.each do |request|
     rescue
       # Any problems just delete the whole directory
       FileUtils.rm_rf("data/#{id}")
-      raise
+      puts "Something went wrong... Let's just continue"
+      #raise
     end
   end
 end
