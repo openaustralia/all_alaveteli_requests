@@ -118,3 +118,21 @@ else
   end
   FileUtils.touch("data/unzipped")
 end
+
+if File.exists?("data/documents")
+  puts "Already moved documents into one directory"
+else
+  # Copy all unzipped files into one directory
+  FileUtils.mkdir("data/documents")
+
+  Dir.entries("data").each do |entry|
+    if entry != "." && entry != ".." && entry != "downloaded" && entry != "unzipped" && entry != "documents"
+      puts "Copying contents of #{entry}..."
+      Dir.entries("data/#{entry}/download").each do |entry2|
+        if entry2 != "." && entry2 != ".."
+          FileUtils.cp("data/#{entry}/download/#{entry2}", "data/documents/#{entry}_#{entry2}")
+        end
+      end
+    end
+  end
+end
