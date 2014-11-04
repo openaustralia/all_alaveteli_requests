@@ -130,9 +130,47 @@ else
       puts "Copying contents of #{entry}..."
       Dir.entries("data/#{entry}/download").each do |entry2|
         if entry2 != "." && entry2 != ".."
-          FileUtils.cp("data/#{entry}/download/#{entry2}", "data/documents/#{entry}_#{entry2}")
+          FileUtils.cp("data/#{entry}/download/#{entry2}", "data/documents/#{entry}_#{entry2.gsub(' ','_')}")
         end
       end
     end
   end
 end
+
+# Clean out some specific files that are of no relevance or in a weird file format that we can't convert
+FileUtils.rm_f ("data/documents/459_1_3_attachment.delivery_status")
+FileUtils.rm_rf("data/documents/28_1_3_image001.wmz")
+
+# All images are just email filler. So removing them with a few exceptions (gone through these by hand)
+not_delete = [
+  "444_6_3_attachment.gif",
+  "444_6_4_attachment.gif",
+  "444_6_5_attachment.gif",
+  "444_6_6_attachment.gif",
+  "444_6_7_attachment.gif",
+  "444_6_8_attachment.gif",
+  "444_6_9_attachment.gif",
+  "444_6_10_attachment.gif",
+  "684_4_5_image008.png",
+  "684_4_6_image009.png",
+  "684_4_7_image015.png"
+].map{|a| "data/documents/#{a}"}
+
+#png, jpg, gif
+
+files = Dir.glob("data/documents/*.gif") + Dir.glob("data/documents/*.png") + Dir.glob("data/documents/*.jpg")
+files.each do |entry|
+  FileUtils.rm(entry) unless not_delete.include?(entry)
+end
+
+documents = Dir.entries("data/documents")
+documents.delete('.')
+documents.delete('..')
+
+documents_by_type = {}
+documents.each do |d|
+  type = `file --mime-type -b data/documents/#{d}`.strip
+  documents_by_type[type] ||= []
+  documents_by_type[type] << d
+end
+puts documents_by_type.to_yaml
