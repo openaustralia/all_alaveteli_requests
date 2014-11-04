@@ -163,8 +163,11 @@ files.each do |entry|
   FileUtils.rm(entry) unless not_delete.include?(entry)
 end
 
-# Remove stupid text disclaimers
-Dir.glob("data/documents/*disclaimer*").each do |entry|
+# Remove stupid text disclaimers and .delivery_status files
+files = Dir.glob("data/documents/*disclaimer*") +
+  Dir.glob("data/documents/*mg_info*") +
+  Dir.glob("data/documents/*.delivery_status")
+files.each do |entry|
   FileUtils.rm(entry)
 end
 
