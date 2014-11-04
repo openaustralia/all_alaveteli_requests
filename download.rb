@@ -51,11 +51,10 @@ def all_request_urls(start_date)
   # First request was in October 2012
   from_date = start_date
   while from_date <= Date.today
-    to_date = from_date.next_month
-    links += request_urls("https://www.righttoknow.org.au/list/all?request_date_after=#{from_date.strftime('%Y/%m/%d')}&request_date_before=#{to_date.strftime('%Y/%m/%d')}")
+    links += request_urls("https://www.righttoknow.org.au/list/all?request_date_after=#{from_date.strftime('%Y/%m/%d')}&request_date_before=#{from_date.next_month.strftime('%Y/%m/%d')}")
     from_date = from_date.next_month
   end
-  links
+  links.uniq
 end
 
 OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
