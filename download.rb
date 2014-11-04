@@ -103,3 +103,17 @@ else
 
   FileUtils.touch("data/downloaded")
 end
+
+if File.exists?("data/unzipped")
+  puts "Skipping unzipping because we've already done it"
+else
+  Dir.entries("data").each do |entry|
+    if entry != "." && entry != ".." && entry != "downloaded"
+      Dir.chdir("data/#{entry}") do
+        puts "Unzipping data/#{entry}/download.zip"
+        system("unzip download.zip")
+      end
+    end
+  end
+  FileUtils.touch("data/unzipped")
+end
