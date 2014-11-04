@@ -163,6 +163,11 @@ files.each do |entry|
   FileUtils.rm(entry) unless not_delete.include?(entry)
 end
 
+# Remove stupid text disclaimers
+Dir.glob("data/documents/*disclaimer*").each do |entry|
+  FileUtils.rm(entry)
+end
+
 documents = Dir.entries("data/documents")
 documents.delete('.')
 documents.delete('..')
