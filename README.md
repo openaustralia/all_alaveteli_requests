@@ -1,6 +1,6 @@
-Download all visible requests from an Alaveteli site
+# Download all visible requests from an Alaveteli site
 
-This is a work-in-progress
+N.B. This is a work-in-progress
 
 ## Why is this necessary?
 
