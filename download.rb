@@ -8,6 +8,7 @@
 
 require "mechanize"
 require 'json'
+require 'logger'
 
 def load_secrets
   if File.exists?(".secrets")
@@ -25,7 +26,8 @@ end
 
 def request_urls(url)
   agent = Mechanize.new
-
+  agent.log = Logger.new(STDERR)
+  
   links = []
   while url
     puts "Looking at page #{url}..."
@@ -62,7 +64,6 @@ secrets = load_secrets
 if File.exists?("data/downloaded")
   puts "Skipping the downloading because we've already finished that"
 else
-  OpenSSL::SSL::VERIFY_PEER = OpenSSL::SSL::VERIFY_NONE
 
   requests = all_request_urls(Date.new(secrets["start"]["year"], secrets["start"]["month"], 1))
 
