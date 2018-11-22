@@ -17,44 +17,25 @@ def load_secrets
     puts "Create a file .secrets and put your Alaveteli email and password there like this:"
     puts 'email: YOUR@EMAIL'
     puts 'password: YOURPASSWORD'
-    puts 'start:'
-    puts '  year: YEAR_OF_FIRST_REQUEST_ON_YOUR_SITE'
-    puts '  month: MONTH_OF_FIRST_REQUEST_ON_YOUR_SITE'
+    puts 'from_id: 1'
+    puts 'to_id: 9999'
     exit
   end
 end
 
-def request_urls(url)
-  agent = Mechanize.new
-  agent.log = Logger.new(STDERR)
-  
+def all_request_json_urls(base_url, from_request_id, to_request_id, agent)
   links = []
-  while url
-    puts "Looking at page #{url}..."
-    page = agent.get(url)
-    links += page.search(".request_listing .head a").map do |a|
-      uri = page.uri + a["href"]
-      # We don't want the anchor part of the url
-      uri.fragment = nil
-      uri.to_s
-    end
-    n = page.at("a[rel='next']")
-    if n
-      url = (page.uri + n["href"]).to_s
-    else
-      url = nil
-    end
-  end
-  links
-end
 
-def all_request_urls(start_date)
-  links = []
-  # First request was in October 2012
-  from_date = start_date
-  while from_date <= Date.today
-    links += request_urls("https://www.righttoknow.org.au/list/all?request_date_after=#{from_date.strftime('%Y/%m/%d')}&request_date_before=#{from_date.next_month.strftime('%Y/%m/%d')}")
-    from_date = from_date.next_month
+  (from_request_id..to_request_id).each do |id|
+    puts "Checking #{id}..."
+    url = "#{base_url}/request/#{id}.json"
+    begin
+      agent.head(url)
+      links << url
+    rescue Mechanize::ResponseCodeError
+      puts "Skipping #{id}"
+      next
+    end
   end
   links.uniq
 end
@@ -65,9 +46,9 @@ if File.exists?("data/downloaded")
   puts "Skipping the downloading because we've already finished that"
 else
 
-  requests = all_request_urls(Date.new(secrets["start"]["year"], secrets["start"]["month"], 1))
-
   agent = Mechanize.new
+  agent.user_agent_alias = 'Mac Safari'
+  #agent.log = Logger.new(STDERR)
   page = agent.get("https://www.righttoknow.org.au/profile/sign_in")
   form = page.form_with(id: "signin_form")
   email_field = form.field_with(name: "user_signin[email]")
@@ -76,12 +57,14 @@ else
   password_field.value = secrets["password"]
   page = form.submit
 
+  requests = all_request_json_urls("https://www.righttoknow.org.au", secrets["from_id"].to_i, secrets["to_id"].to_i, agent)
   # First need to login because we can't download the zip file without being logged in
 
   requests.each do |request|
-    json = agent.get("#{request}.json").body.to_s
+    json = agent.get(request).body.to_s
     page = JSON.parse(json)
     id = page["id"]
+    url_title = page["url_title"]
     if File.exists?("data/#{id}")
       puts "Skipping request #{id}. Already downloaded."
     else
@@ -90,7 +73,7 @@ else
         # Create a directory based on the id
         FileUtils.mkdir_p("data/#{id}")
         File.open("data/#{id}/request.json", "w") {|f| f.write(json)}
-        zip = agent.get("#{request}/download").body
+        zip = agent.get("#{url_title}/download").body
         File.open("data/#{id}/download.zip", "w") {|f| f.write(zip)}
       rescue
         # Any problems just delete the whole directory
